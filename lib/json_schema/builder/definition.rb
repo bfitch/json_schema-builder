@@ -40,9 +40,7 @@ class Definition
     definition.instance_eval(&block) if block_given?
 
     output[name] = default.merge!(definition.output)
-    output
   end
-
   def string(name, description, &block)
     default = {
       description: description,
@@ -53,11 +51,8 @@ class Definition
     definition = self.class.new
     definition.instance_eval(&block) if block_given?
 
-    default.merge! definition.output
-    output[name] = default
-    output
+    output[name] = default.merge!(definition.output)
   end
-
   def date(name, description, &block)
     default = {
       description: description,
@@ -69,11 +64,8 @@ class Definition
     definition = self.class.new
     definition.instance_eval(&block) if block_given?
 
-    default.merge! definition.output
-    output[name] = default
-    output
+    output[name] = default.merge!(definition.output)
   end
-
   def date_time(name, description, &block)
     default = {
       description: description,
@@ -85,9 +77,15 @@ class Definition
     definition = self.class.new
     definition.instance_eval(&block) if block_given?
 
-    default.merge!(definition.output)
-    output[name] = default
-    output
+    output[name] = default.merge!(definition.output)
+  end
+  def enum(name, description, &block)
+    default = { description: description }
+
+    definition = self.class.new
+    definition.instance_eval(&block) if block_given?
+
+    output[name] = default.merge!(definition.output)
   end
 
   def array(name, description, &block)
@@ -101,18 +99,33 @@ class Definition
     definition.instance_eval(&block) if block_given?
 
     output[name] = default.merge!({ items: definition.output })
-    output
   end
 
-  def enum(name, description, &block)
-    default = { description: description }
-
-    definition = self.class.new
+  def properties(&block)
+    definition = self.class.new(@schema)
     definition.instance_eval(&block) if block_given?
+    @output[:properties] = definition.output
+  end
 
-    default.merge!(definition.output)
-    output[name] = default
-    output
+  def one_of(&block)
+    @output[:oneOf] = []
+
+    definition = self.class.new(@schema)
+    definition.instance_eval(&block)
+
+    @output[:oneOf] << definition.output
+  end
+
+  def object(description, &block)
+    default = {
+      description: description,
+      type: ['object']
+    }
+
+    definition = self.class.new(@schema)
+    definition.instance_eval(&block)
+
+    @output = default.merge!(definition.output)
   end
 
   def ref(mapping)
@@ -130,7 +143,6 @@ class Definition
         :$ref => "/schemata/#{@schema.resource}#/definitions/#{reference}"
       }
     end
-    @output
   end
 
   def description(description)
@@ -147,6 +159,14 @@ class Definition
 
   def type(type)
     output[:type] = type
+  end
+
+  def required(properties)
+    output[:required] = properties
+  end
+
+  def additional_properties(bool)
+    output[:additionalProperties] = bool
   end
 
   def values(values)

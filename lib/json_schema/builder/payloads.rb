@@ -22,6 +22,11 @@ class Payloads
     output[name][:properties] = ::Definition.new(@schema).build(&block)
   end
 
-  def response
+  def response(name, description, &block)
+    default = {
+      description: description,
+      type: ["object"]
+    }
+    output[name] = default.merge!(::Definition.new(@schema).build(&block))
   end
 end
