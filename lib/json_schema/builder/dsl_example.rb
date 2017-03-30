@@ -69,11 +69,18 @@ schema :admission, 'API for manipulating admissions' do
   end
 
   payloads do
-    request :collection, 'Request properties for index' do
-      ref :patient_guid, optional: true
+    request :index, 'Request properties for index' do
+      ref :patient_guid
+      ref :location_type
+      array :practice_user_uids, "Only return admissions for patients with these practice users on their care team" do
+        description "unique identifier of the staff_member to query for"
+        example "8c1ced3hb74d435dbc2aa15a33ff1d80"
+        formatt "uuid"
+        type "string"
+      end
     end
 
-    response :collection, 'Response to an index request' do
+    response :index, 'Response to an index request' do
       one_of do
         ref :admissions, 'A successful response',
           required: true,
@@ -86,7 +93,7 @@ schema :admission, 'API for manipulating admissions' do
 
     request :mutation, 'Expected payload to mutate an admission' do
       string :admission, required: true do
-        ref :patient_guid, name: :patient_id
+        ref :patient_guid => :patient_id
         ref :notes
         ref :reason
         ref :location_type
@@ -125,15 +132,18 @@ schema :admission, 'API for manipulating admissions' do
 
   links do
     index '/admissions', 'Retrieve admissions' do
-      payloads :collection
+      request :index
+      response :index
     end
 
     create '/admissions', 'Create a new admission' do
-      payloads :mutation
+      request :mutation
+      response :mutation
     end
 
     show '/admissions/:identity', 'Retrieve admissions' do
-      payloads :admission
+      request :admission
+      response :admission
 
     update '/admissions/:identity', 'Retrieve an admission' do
       request :mutation

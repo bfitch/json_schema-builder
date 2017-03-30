@@ -1,4 +1,5 @@
 require_relative 'definitions'
+require_relative 'payloads'
 
 class Schema
   attr_accessor :output, :resource
@@ -30,6 +31,7 @@ class Schema
   end
 
   def payloads(&block)
+    output[:definitions].merge!(::Payloads.new.build(&block))
   end
 
   def links(&block)

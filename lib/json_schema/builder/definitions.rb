@@ -25,7 +25,8 @@ class Definitions
   end
 
   def method_missing(type, *args, &block)
-    name, arguments = args
-    output[name] = ::Definition.new(type, arguments, @schema).build(&block)
+    name, description = args
+    definition = ::Definition.new(@schema)
+    output[name] = definition.send(type, description, &block)
   end
 end

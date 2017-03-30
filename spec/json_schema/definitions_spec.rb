@@ -245,16 +245,6 @@ describe Definitions do
           }
         })
       end
-
-      it 'raises an error if a ref is used outside an array' do
-        expect do
-          definitions.build do
-            string :admissions, 'A collection of admissions' do
-              ref :admission
-            end
-          end
-        end.to raise_error(RuntimeError, "A ref can only be declared in array definitions.")
-      end
     end
   end
 end
