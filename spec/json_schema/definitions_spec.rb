@@ -19,10 +19,12 @@ describe Definitions do
       end
 
       context 'referenced definition is not defined' do
-        it 'raises a helpful error' do
-          expect {
-            definitions.build { ref :identity => :id }
-          }.to raise_error(RuntimeError, "Missing definition: id")
+        it 'has no ordering dependency' do
+          output = definitions.build { ref :identity => :id }
+
+          expect(output).to eq({
+            identity: { :$ref => "/schemata/admission#/definitions/id" }
+          })
         end
       end
     end

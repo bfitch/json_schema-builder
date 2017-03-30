@@ -31,7 +31,7 @@ class Schema
   end
 
   def payloads(&block)
-    output[:definitions].merge!(::Payloads.new.build(&block))
+    output[:payloads] = ::Payloads.new.build(&block)
   end
 
   def links(&block)

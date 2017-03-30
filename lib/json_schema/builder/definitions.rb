@@ -1,4 +1,5 @@
 require_relative 'definition'
+require 'pry'
 
 class Definitions
   attr_accessor :output
@@ -9,24 +10,11 @@ class Definitions
   end
 
   def build(&block)
-    instance_eval(&block)
+    output.merge!(::Definition.new(@schema).build(&block))
     output
   end
 
   def import(name, klass)
   # figure this out
-  end
-
-  def ref(mapping)
-    name, reference = mapping.to_a.pop
-    raise RuntimeError.new("Missing definition: #{reference}") if output[reference].nil?
-
-    output[name] = { :$ref => "/schemata/#{@schema.resource}#/definitions/#{reference}" }
-  end
-
-  def method_missing(type, *args, &block)
-    name, description = args
-    definition = ::Definition.new(@schema)
-    output[name] = definition.send(type, description, &block)
   end
 end
