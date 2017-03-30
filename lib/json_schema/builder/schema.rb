@@ -31,7 +31,7 @@ class Schema
   end
 
   def payloads(&block)
-    output[:payloads] = ::Payloads.new.build(&block)
+    output[:payloads] = ::Payloads.new(self).build(&block)
   end
 
   def links(&block)
