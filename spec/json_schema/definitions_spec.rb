@@ -10,7 +10,7 @@ describe Definitions do
       it 'builds a ref definition' do
         output = definitions.build do
           uuid :id, "cool"
-          ref :identity, :references => :id
+          ref :identity => :id
         end
 
         expect(output[:identity]).to eq({
@@ -21,7 +21,7 @@ describe Definitions do
       context 'referenced definition is not defined' do
         it 'raises a helpful error' do
           expect {
-            definitions.build { ref :identity, :references => :id }
+            definitions.build { ref :identity => :id }
           }.to raise_error(RuntimeError, "Missing definition: id")
         end
       end
@@ -36,8 +36,9 @@ describe Definitions do
         expect(output).to eq({
           id: {
             description: "unique identifier of an admission",
+            example: "6c1ced3f-b74d-435d-ac2a-a15a33ff1d80",
             format: "uuid",
-            type: "string"
+            type: ["string"]
           }
         })
       end
@@ -45,16 +46,16 @@ describe Definitions do
       it 'sets properties with a block' do
         output = definitions.build  do
           uuid :id, 'cool description' do
-            example '6c1ced3f-b74d-435d-ac2a-a15a33ff1d80'
+            example 'abc123'
           end
         end
 
         expect(output).to eq({
           id: {
             description: "cool description",
-            example: "6c1ced3f-b74d-435d-ac2a-a15a33ff1d80",
+            example: "abc123",
             format: "uuid",
-            type: "string"
+            type: ["string"]
           }
         })
       end
@@ -69,7 +70,8 @@ describe Definitions do
         expect(output).to eq({
           patient_guid: {
             description: 'The guid of the patient whose care plan it is',
-            type: "string"
+            example: 'example string',
+            type: ["string"]
           }
         })
       end
@@ -85,9 +87,173 @@ describe Definitions do
           patient_guid: {
             description: 'The guid of the patient whose care plan it is',
             example: '0123456789abcdef0123456789abcdef',
-            type: "string"
+            type: ["string"]
           }
         })
+      end
+    end
+
+    describe 'enum' do
+      it 'builds a string enum' do
+        output = definitions.build  do
+          enum :location_type, 'Type of facility where the patient is admitted' do
+            example 'emergency_room'
+            values [
+              'inpatient_hospitalization',
+              'skilled_nursing_facility',
+            ]
+          end
+        end
+
+        expect(output).to eq({
+          location_type: {
+            description: "Type of facility where the patient is admitted",
+            example: "emergency_room",
+            type: ["string"],
+            enum: [ "inpatient_hospitalization", "skilled_nursing_facility" ]
+          }
+        })
+      end
+
+      it 'inferrs the correct types' do
+        output = definitions.build  do
+          enum :location_type, 'Type of facility where the patient is admitted' do
+            example 'emergency_room'
+            values [ 'inpatient_hospitalization', 50, nil ]
+          end
+        end
+
+        expect(output).to eq({
+          location_type: {
+            description: "Type of facility where the patient is admitted",
+            example: "emergency_room",
+            type: ["string", "integer", "null"],
+            enum: [ "inpatient_hospitalization", 50, nil ]
+          }
+        })
+      end
+
+      it 'type can be specified instead of inferred' do
+        output = definitions.build  do
+          enum :location_type, 'Type of facility where the patient is admitted' do
+            example 'emergency_room'
+            type ['string', 'null']
+            values [
+              'inpatient_hospitalization',
+              'skilled_nursing_facility',
+            ]
+          end
+        end
+
+        expect(output).to eq({
+          location_type: {
+            description: "Type of facility where the patient is admitted",
+            example: "emergency_room",
+            type: ["string", "null"],
+            enum: [ "inpatient_hospitalization", "skilled_nursing_facility" ]
+          }
+        })
+      end
+    end
+
+    describe 'date' do
+      it 'sets the format to "date"' do
+        output = definitions.build  do
+          date :admission_date, 'Date the patient is admitted'
+        end
+
+        expect(output).to eq({
+          admission_date: {
+            description: "Date the patient is admitted",
+            example: "2012-01-01",
+            format: "date",
+            type: ["string"]
+          }
+        })
+      end
+
+      describe 'overriding the type' do
+        it 'sets the format to "date" and the type' do
+          output = definitions.build  do
+            date :admission_date, 'Date the patient is admitted' do
+              type ['string', 'null']
+            end
+          end
+
+          expect(output).to eq({
+            admission_date: {
+              description: "Date the patient is admitted",
+              example: "2012-01-01",
+              format: "date",
+              type: ["string", "null"]
+            }
+          })
+        end
+      end
+    end
+
+    describe 'date_time' do
+      it 'sets the format to "date-time"' do
+        output = definitions.build do
+          date_time :updated_at, 'When the admission was updated'
+        end
+
+        expect(output).to eq({
+          updated_at: {
+            description: "When the admission was updated",
+            example: "2012-01-01T12:00:00Z",
+            format: "date-time",
+            type: ["string"]
+          }
+        })
+      end
+    end
+
+    describe 'array' do
+      it 'builds an array with references to items' do
+        output = definitions.build do
+          array :errors, 'A collection of errors' do
+            ref :error
+          end
+        end
+
+        expect(output).to eq({
+          errors: {
+            description: "A collection of errors",
+            type: ["array"],
+            items: {
+              :$ref => "/schemata/admission#/definitions/error"
+            }
+          }
+        })
+      end
+
+      it 'can reference its own schema' do
+        output = definitions.build do
+          array :admissions, 'A collection of admissions' do
+            ref :admission
+          end
+        end
+
+        expect(output).to eq({
+          admissions: {
+            description: "A collection of admissions",
+            type: ["array"],
+            items: {
+              :$ref => "/schemata/admission"
+            }
+          }
+        })
+      end
+
+      it 'raises an error if a ref is used outside an array' do
+        expect do
+          definitions.build do
+            string :admissions, 'A collection of admissions' do
+              ref :admission
+            end
+          end
+        end.to raise_error(RuntimeError, "A ref can only be declared in array definitions.")
       end
     end
   end

@@ -3,7 +3,9 @@ schema :admission, 'API for manipulating admissions' do
   title 'Admission Resource'
 
   definitions do
-    ref :identity, name: :id
+    import :patient_guid, BaseDefinitions
+
+    ref :identity => :id
 
     uuid :id, 'unique identifier of an admission' do
       example '6c1ced3f-b74d-435d-ac2a-a15a33ff1d80'
@@ -46,7 +48,7 @@ schema :admission, 'API for manipulating admissions' do
     end
     date :discharge_date, 'Date the patient was discharged' do
       example '2012-01-01'
-      values Date, Nil
+      type ['date', 'null']
     end
     date_time :created_at, 'When the admission was created' do
       example '2012-01-01T12:00:00Z'
@@ -55,14 +57,14 @@ schema :admission, 'API for manipulating admissions' do
       example '2012-01-01T12:00:00Z'
     end
     array :admissions, 'A collection of admissions' do
-      values { ref :admission }
+      ref :admission
     end
     string :error, 'An error explaining why an action failed' do
       example "Couldn't find Patient"
       min_length 1
     end
     array :errors, 'A collection of errors' do
-      values { ref :error }
+      ref :error
     end
   end
 

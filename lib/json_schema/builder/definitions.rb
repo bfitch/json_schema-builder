@@ -1,3 +1,5 @@
+require_relative 'definition'
+
 class Definitions
   attr_accessor :output
 
@@ -11,56 +13,19 @@ class Definitions
     output
   end
 
-  def ref(name, references:)
-    raise RuntimeError.new("Missing definition: #{references}") if output[references].nil?
+  def import(name, klass)
+  # figure this out
+  end
 
-    output[name] = {
-      :$ref => "/schemata/#{@schema.resource}#/definitions/#{references}"
-    }
+  def ref(mapping)
+    name, reference = mapping.to_a.pop
+    raise RuntimeError.new("Missing definition: #{reference}") if output[reference].nil?
+
+    output[name] = { :$ref => "/schemata/#{@schema.resource}#/definitions/#{reference}" }
   end
 
   def method_missing(type, *args, &block)
-    name, description = args
-    output[name] = Definition.new(type, description).build(&block)
-  end
-
-  class Definition
-    attr_accessor :output, :factory
-
-    def initialize(factory, description)
-      @factory = factory
-      @output = {
-        description: description
-      }
-      set_defaults
-    end
-
-    def build(&block)
-      instance_eval(&block) if block_given?
-      output
-    end
-
-    def example(example)
-      output[:example] = example
-    end
-
-    def format(format)
-      output[:format] = format
-    end
-
-    def type(type)
-      output[:type] = type
-    end
-
-    private
-
-    def set_defaults
-      case factory
-      when :uuid
-        output.merge!({format: 'uuid', type: 'string'})
-      when :string
-        output.merge!({type: 'string'})
-      end
-    end
+    name, arguments = args
+    output[name] = ::Definition.new(type, arguments, @schema).build(&block)
   end
 end
