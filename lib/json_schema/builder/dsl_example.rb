@@ -81,48 +81,81 @@ schema :admission, 'API for manipulating admissions' do
     end
 
     response :index, 'Response to an index request' do
+      properties { ref :admissions => :admissions }
+
       one_of do
-        ref :admissions, 'A successful response',
-          required: true,
-          additional: false
-        ref :errors, 'A failure response to an index request.',
-          required: true,
-          additional: false
+        object 'A successful response' do
+          required ['admissions']
+          additional_properties false
+          properties { ref :admissions => :admissions }
+        end
+        object 'A failure response to an index request' do
+          required ['errors']
+          additional_properties false
+          properties { ref :errors => :errors }
+        end
       end
     end
 
     request :mutation, 'Expected payload to mutate an admission' do
-      string :admission, required: true do
-        ref :patient_guid => :patient_id
-        ref :notes
-        ref :reason
-        ref :location_type
-        ref :discharge_disposition
-        ref :facility
-        ref :admission_date
-        ref :discharge_date
+      required ['admission']
+      properties do
+        object :admission do
+          properties do
+            ref :patient_guid => :patient_guid
+            ref :notes => :notes
+            ref :reason => :reason
+            ref :location_type => :location_type
+            ref :discharge_disposition => :discharge_disposition
+            ref :facility => :facility
+            ref :admission_date => :admission_date
+            ref :discharge_date => :discharge_date
+          end
+        end
       end
     end
 
     response :admission do
+      properties do
+        object(:admission) { ref :admission => :admission }
+      end
+
       one_of do
-        ref :admission, 'A successful response', required: true
-        ref :error_response
+        object 'A successful response' do
+          required ['admission']
+          properties { ref :admission => :admission }
+        end
+        object { ref :error_response }
+      end
+    end
+
+    response :admission do
+      properties do
+        object :admission { ref {:admission => :admission} }
+      end
+
+      one_of do
+        object 'A successful response' do
+          required ['admission']
+          properties { object :admission { ref {:admission => :admission} } }
+        end
+        object do { :error_response => :error_response }
       end
     end
 
     response :error do
-      array :errors, required: true do
-        values do
+      required ['errors']
+      properties do
+        array :errors do
           one_of do
             string
-            hash do
-              string :detail
-              hash :source do
-                string :pointer
+            object do
+              properties do
+                string :detail
+                object(:source) { properties { string :pointer } }
+                string :status
+                string :title
               end
-              string :status
-              string :title
             end
           end
         end

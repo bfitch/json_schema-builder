@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'ostruct'
 
 describe Definitions do
   let(:schema) { OpenStruct.new({resource: 'admission'})}
@@ -72,7 +71,6 @@ describe Definitions do
         expect(output).to eq({
           patient_guid: {
             description: 'The guid of the patient whose care plan it is',
-            example: 'example string',
             type: ["string"]
           }
         })
@@ -244,6 +242,41 @@ describe Definitions do
             items: {
               :$ref => "/schemata/admission"
             }
+          }
+        })
+      end
+    end
+
+    describe 'import' do
+      class IoraDefinitions
+        def practice_user_uid
+          Proc.new do
+            string :practice_user_uid, 'The uid of a practice user' do
+              example 'abc123'
+            end
+          end
+        end
+      end
+
+      it 'ouputs the imported definitions' do
+        output = definitions.build  do
+          import :practice_user_uid, IoraDefinitions
+
+          string :patient_guid, 'The guid of the patient whose care plan it is' do
+            example 'abc'
+          end
+        end
+
+        expect(output).to eq({
+          :practice_user_uid=> {
+            :type=>["string"],
+            :description=>"The uid of a practice user",
+            :example=>"abc123"
+          },
+          :patient_guid=> {
+            :type=>["string"],
+            :description=>"The guid of the patient whose care plan it is",
+            :example=>"abc"
           }
         })
       end

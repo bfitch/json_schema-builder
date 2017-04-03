@@ -6,15 +6,12 @@ class Definitions
 
   def initialize(schema)
     @schema = schema
+    @definition = ::Definition.new(@schema)
     @output = {}
   end
 
   def build(&block)
-    output.merge!(::Definition.new(@schema).build(&block))
+    output.merge!(@definition.build(&block))
     output
-  end
-
-  def import(name, klass)
-  # figure this out
   end
 end

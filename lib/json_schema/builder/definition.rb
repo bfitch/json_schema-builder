@@ -1,7 +1,8 @@
-require 'pp'
-require 'pry'
+require_relative 'types'
 
 class Definition
+  include JsonSchema::Builder::Types
+
   TYPE_MAP = {
     Array => 'array',
     TrueClass => 'boolean',
@@ -18,8 +19,9 @@ class Definition
 
   attr_accessor :output
 
-  def initialize(schema = nil)
+  def initialize(schema = nil, options = {})
     @schema = schema || Struct.new(:resource).new
+    @options = options
     @output = {}
   end
 
@@ -28,77 +30,12 @@ class Definition
     output
   end
 
-  def uuid(name, description, &block)
-    default = {
-      description: description,
-      example: '6c1ced3f-b74d-435d-ac2a-a15a33ff1d80',
-      format: 'uuid',
-      type: ['string']
-    }
-
-    definition = self.class.new
-    definition.instance_eval(&block) if block_given?
-
-    output[name] = default.merge!(definition.output)
-  end
-  def string(name, description, &block)
-    default = {
-      description: description,
-      example: 'example string',
-      type: ['string']
-    }
-
-    definition = self.class.new
-    definition.instance_eval(&block) if block_given?
-
-    output[name] = default.merge!(definition.output)
-  end
-  def date(name, description, &block)
-    default = {
-      description: description,
-      example: '2012-01-01',
-      format: 'date',
-      type: ['string']
-    }
-
-    definition = self.class.new
-    definition.instance_eval(&block) if block_given?
-
-    output[name] = default.merge!(definition.output)
-  end
-  def date_time(name, description, &block)
-    default = {
-      description: description,
-      example: '2012-01-01T12:00:00Z',
-      format: 'date-time',
-      type: ['string']
-    }
-
-    definition = self.class.new
-    definition.instance_eval(&block) if block_given?
-
-    output[name] = default.merge!(definition.output)
-  end
-  def enum(name, description, &block)
-    default = { description: description }
-
-    definition = self.class.new
-    definition.instance_eval(&block) if block_given?
-
-    output[name] = default.merge!(definition.output)
-  end
-
-  def array(name, description, &block)
-    default = {
-      description: description,
-      type: ['array'],
-      items: {}
-    }
-
+  def import(name, klass)
+    proc = klass.new.send(name)
     definition = self.class.new(@schema)
-    definition.instance_eval(&block) if block_given?
+    definition.instance_eval(&proc)
 
-    output[name] = default.merge!({ items: definition.output })
+    @output = @output.merge!(definition.output)
   end
 
   def properties(&block)
@@ -110,22 +47,10 @@ class Definition
   def one_of(&block)
     @output[:oneOf] = []
 
-    definition = self.class.new(@schema)
+    definition = self.class.new(@schema, one_of: true)
     definition.instance_eval(&block)
 
-    @output[:oneOf] << definition.output
-  end
-
-  def object(description, &block)
-    default = {
-      description: description,
-      type: ['object']
-    }
-
-    definition = self.class.new(@schema)
-    definition.instance_eval(&block)
-
-    @output = default.merge!(definition.output)
+    @output[:oneOf] = definition.output[:oneOf]
   end
 
   def ref(mapping)
@@ -139,14 +64,19 @@ class Definition
     else
       property, reference = mapping.to_a.pop
 
-      @output[property] = {
-        :$ref => "/schemata/#{@schema.resource}#/definitions/#{reference}"
-      }
+      if reference.to_s == @schema.resource
+        @output[property] = { :$ref => "/schemata/#{@schema.resource}" }
+      else
+        @output[property] = {
+          :$ref => "/schemata/#{@schema.resource}#/definitions/#{reference}"
+        }
+      end
     end
+
   end
 
   def description(description)
-    output[:description] = description
+    output[:description] = description if description
   end
 
   def example(example)
