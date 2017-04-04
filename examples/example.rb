@@ -4,7 +4,6 @@ schema :admission, 'API for manipulating admissions' do
   title 'Admission Resource'
 
   definitions do
-
     ref :identity => :id
 
     import :patient_guid, ::IoraDefinitions

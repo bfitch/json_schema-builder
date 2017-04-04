@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-04/hyper-schema",
+  "id": "schemata/admission",
+  "type": [
+    "object"
+  ],
+  "description": "API for manipulating admissions",
+  "title": "Admission Resource",
+  "definitions": {
+    "identity": {
+      "$ref": "/schemata/admission#/definitions/id"
+    },
+    "patient_guid": {
+      "type": [
+        "string"
+      ],
+      "description": "The guid of the patient whose care plan it is",
+      "example": "0123456789abcdef0123456789abcdef"
+    },
+    "id": {
+      "description": "unique identifier of an admission",
+      "example": "6c1ced3f-b74d-435d-ac2a-a15a33ff1d80",
+      "format": "uuid",
+      "type": [
+        "string"
+      ]
+    },
+    "notes": {
+      "type": [
+        "string"
+      ],
+      "description": "Text describing the admission",
+      "example": "Looks like they had a bad fall."
+    },
+    "created_by_uid": {
+      "description": "unique identifier of the staff_member who created the admission",
+      "example": "8c1ced3hb74d435dbc2aa15a33ff1d80",
+      "format": "uuid",
+      "type": [
+        "string"
+      ]
+    },
+    "updated_by_uid": {
+      "description": "unique identifier of the staff_member who updated the admission",
+      "example": "8c1ced3hb74d435dbc2aa15a33ff1d80",
+      "format": "uuid",
+      "type": [
+        "string"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string"
+      ],
+      "description": "Text indicating why the patient is hospitalized",
+      "example": "Heart attack"
+    },
+    "location_type": {
+      "description": "Type of facility where the patient is admitted",
+      "example": "Hospital emergency",
+      "enum": [
+        "inpatient_hospitalization",
+        "skilled_nursing_facility",
+        "observation",
+        "emergency_room",
+        "other"
+      ],
+      "type": [
+        "string"
+      ]
+    },
+    "discharge_disposition": {
+      "description": "Description of patient discharge",
+      "example": "Home",
+      "enum": [
+        "not_yet_discharged",
+        "skilled_nursing_facility",
+        "home",
+        "other"
+      ],
+      "type": [
+        "string"
+      ]
+    }
+  },
+  "payloads": {
+    "index": {
+      "description": "Request properties for index",
+      "type": [
+        "object"
+      ],
+      "$ref": "/schemata/admission#/definitions/location_type",
+      "practice_user_uids": {
+        "type": [
+          "array"
+        ],
+        "items": {
+          "description": "unique identifier of the staff_member to query for",
+          "example": "8c1ced3hb74d435dbc2aa15a33ff1d80",
+          "format": "uuid",
+          "type": "string"
+        },
+        "description": "Only return admissions for patients with these practice users on their care team"
+      }
+    },
+    "admission": {
+      "type": [
+        "object"
+      ],
+      "properties": {
+        "admission": {
+          "type": [
+            "object"
+          ],
+          "admission": {
+            "$ref": "/schemata/admission#/definitions/admission"
+          }
+        }
+      },
+      "oneOf": [
+        {
+          "type": [
+            "object"
+          ],
+          "description": "A successful response",
+          "required": [
+            "admission"
+          ],
+          "properties": {
+            "admission": {
+              "type": [
+                "object"
+              ],
+              "admission": {
+                "$ref": "/schemata/admission#/definitions/admission"
+              }
+            }
+          }
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "error_response": {
+            "$ref": "/schemata/admission#/definitions/error_response"
+          }
+        }
+      ]
+    },
+    "error": {
+      "type": [
+        "object"
+      ],
+      "required": [
+        "errors"
+      ],
+      "properties": {
+        "errors": {
+          "type": [
+            "array"
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "type": [
+                  "string"
+                ]
+              },
+              {
+                "type": [
+                  "object"
+                ],
+                "properties": {
+                  "detail": {
+                    "type": [
+                      "string"
+                    ]
+                  },
+                  "source": {
+                    "type": [
+                      "object"
+                    ],
+                    "properties": {
+                      "pointer": {
+                        "type": [
+                          "string"
+                        ]
+                      }
+                    }
+                  },
+                  "status": {
+                    "type": [
+                      "string"
+                    ]
+                  },
+                  "title": {
+                    "type": [
+                      "string"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
