@@ -7,9 +7,10 @@ class Schema
   def initialize(resource, description)
     @resource = resource
     @output = {
-      id: "schemata/#{resource}",
-      type: ["object"],
-      description: description
+      :$schema => 'http://json-schema.org/draft-04/hyper-schema',
+      :id => "schemata/#{resource}",
+      :type => ["object"],
+      :description => description
     }
   end
 

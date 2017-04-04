@@ -10,5 +10,9 @@ module JsonSchema
     def self.to_hash
       @schema
     end
+
+    def self.get_binding
+      binding
+    end
   end
 end
